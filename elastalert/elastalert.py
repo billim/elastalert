@@ -679,7 +679,7 @@ class ElastAlerter(object):
         query.update(sort)
 
         try:
-            doc_type = 'elastalert_status'
+            doc_type = '_doc'
             index = self.writeback_es.resolve_writeback_index(self.writeback_index, doc_type)
             if self.writeback_es.is_atleastsixtwo():
                 if self.writeback_es.is_atleastsixsix():
@@ -1391,7 +1391,7 @@ class ElastAlerter(object):
         es = elasticsearch_client(rule)
         # TODO: doc_type = _doc for elastic >= 6
         res = es.index(index='kibana-int',
-                       doc_type='temp',
+                       doc_type='_doc',
                        body=db_body)
 
         # Return dashboard URL
@@ -1409,7 +1409,7 @@ class ElastAlerter(object):
         query = {'query': {'term': {'_id': db_name}}}
         try:
             # TODO use doc_type = _doc
-            res = es.deprecated_search(index='kibana-int', doc_type='dashboard', body=query, _source_include=['dashboard'])
+            res = es.deprecated_search(index='kibana-int', doc_type='_doc', body=query, _source_include=['dashboard'])
         except ElasticsearchException as e:
             raise EAException("Error querying for dashboard: %s" % (e)).with_traceback(sys.exc_info()[2])
 
@@ -1609,8 +1609,9 @@ class ElastAlerter(object):
             writeback_body['@timestamp'] = dt_to_ts(ts_now())
 
         try:
+            doc_type = '_doc'
             index = self.writeback_es.resolve_writeback_index(self.writeback_index, doc_type)
-            if self.writeback_es.is_atleastsixtwo():
+            if self.writeback_es.is_atleastsixsix():
                 res = self.writeback_es.index(index=index, body=body)
             else:
                 res = self.writeback_es.index(index=index, doc_type=doc_type, body=body)
@@ -1894,7 +1895,7 @@ class ElastAlerter(object):
         query.update(sort)
 
         try:
-            doc_type = 'silence'
+            doc_type = '_doc'
             index = self.writeback_es.resolve_writeback_index(self.writeback_index, doc_type)
             if self.writeback_es.is_atleastsixtwo():
                 if self.writeback_es.is_atleastsixsix():
