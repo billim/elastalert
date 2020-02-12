@@ -5,7 +5,7 @@
         "index": "not_analyzed",
         "type": "string"
       },
-      "until": {
+      "@until": {
         "type": "date",
         "format": "dateOptionalTime"
       },
