@@ -3,7 +3,7 @@
     "rule_name": {
       "type": "keyword"
     },
-    "until": {
+    "@until": {
       "type": "date",
       "format": "dateOptionalTime"
     },

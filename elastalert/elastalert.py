@@ -1305,7 +1305,7 @@ class ElastAlerter(object):
             if rule['next_min_starttime']:
                 rule['minimum_starttime'] = rule['next_min_starttime']
                 rule['previous_endtime'] = rule['next_min_starttime']
-            elastalert_logger.info('Pausing %s until next run at %s' % (rule['name'], pretty_ts(rule['next_starttime'])))
+            elastalert_logger.info('Pausing %s @until next run at %s' % (rule['name'], pretty_ts(rule['next_starttime'])))
 
     def stop(self):
         """ Stop an ElastAlert runner that's been started """
@@ -1865,14 +1865,14 @@ class ElastAlerter(object):
             logging.error('Failed to save silence command to Elasticsearch')
             exit(1)
 
-        elastalert_logger.info('Success. %s will be silenced until %s' % (silence_cache_key, silence_ts))
+        elastalert_logger.info('Success. %s will be silenced @until %s' % (silence_cache_key, silence_ts))
 
     def set_realert(self, silence_cache_key, timestamp, exponent):
-        """ Write a silence to Elasticsearch for silence_cache_key until timestamp. """
+        """ Write a silence to Elasticsearch for silence_cache_key @until timestamp. """
         body = {'exponent': exponent,
                 'rule_name': silence_cache_key,
                 '@timestamp': ts_now(),
-                'until': timestamp}
+                '@until': timestamp}
 
         self.silence_cache[silence_cache_key] = (timestamp, exponent)
         return self.writeback('silence', body)
@@ -1886,7 +1886,7 @@ class ElastAlerter(object):
         if self.debug:
             return False
         query = {'term': {'rule_name': rule_name}}
-        sort = {'sort': {'until': {'order': 'desc'}}}
+        sort = {'sort': {'@until': {'order': 'desc'}}}
         if self.writeback_es.is_atleastfive():
             query = {'query': query}
         else:
@@ -1899,19 +1899,19 @@ class ElastAlerter(object):
             if self.writeback_es.is_atleastsixtwo():
                 if self.writeback_es.is_atleastsixsix():
                     res = self.writeback_es.search(index=index, size=1, body=query,
-                                                   _source_includes=['until', 'exponent'])
+                                                   _source_includes=['@until', 'exponent'])
                 else:
                     res = self.writeback_es.search(index=index, size=1, body=query,
-                                                   _source_include=['until', 'exponent'])
+                                                   _source_include=['@until', 'exponent'])
             else:
                 res = self.writeback_es.deprecated_search(index=index, doc_type=doc_type,
-                                                          size=1, body=query, _source_include=['until', 'exponent'])
+                                                          size=1, body=query, _source_include=['@until', 'exponent'])
         except ElasticsearchException as e:
             self.handle_error("Error while querying for alert silence status: %s" % (e), {'rule': rule_name})
 
             return False
         if res['hits']['hits']:
-            until_ts = res['hits']['hits'][0]['_source']['until']
+            until_ts = res['hits']['hits'][0]['_source']['@until']
             exponent = res['hits']['hits'][0]['_source'].get('exponent', 0)
             if rule_name not in list(self.silence_cache.keys()):
                 self.silence_cache[rule_name] = (ts_to_dt(until_ts), exponent)
@@ -2011,7 +2011,7 @@ class ElastAlerter(object):
         return all_counts
 
     def next_alert_time(self, rule, name, timestamp):
-        """ Calculate an 'until' time and exponent based on how much past the last 'until' we are. """
+        """ Calculate an '@until' time and exponent based on how much past the last '@until' we are. """
         if name in self.silence_cache:
             last_until, exponent = self.silence_cache[name]
         else:
